@@ -36,7 +36,7 @@ def build():
     if DIST_DIR.exists():
         shutil.rmtree(DIST_DIR)
     result = subprocess.run(
-        [sys.executable, "-m", "build", "--no-isolation"],
+        [sys.executable, "-m", "build"],
         cwd=str(REPO_ROOT),
     )
     if result.returncode != 0:
