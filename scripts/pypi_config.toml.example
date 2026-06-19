@@ -1,0 +1,14 @@
+; PyPI configuration
+; Replace the token with your own:
+;   - Test PyPI: https://test.pypi.org/manage/account/token/
+;   - PyPI:      https://pypi.org/manage/account/token/
+
+[testpypi]
+repository = "https://test.pypi.org/legacy/"
+username = "__token__"
+password = "pypi-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+[pypi]
+repository = "https://upload.pypi.org/legacy/"
+username = "__token__"
+password = "pypi-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"

@@ -6,4 +6,5 @@ dist/
 test_reports/
 .pytest_cache/
 .coverage
+scripts/pypi_config.toml
 
