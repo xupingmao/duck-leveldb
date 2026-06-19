@@ -167,6 +167,7 @@ class Iterator:
 class LevelDB:
     def __init__(self, db_path: str, create: bool = True):
         dll = _get_dll()
+        self._closed = False
         self._db_path = Path(db_path).resolve()
         self._db_path.mkdir(parents=True, exist_ok=True)
         self._options = dll.leveldb_options_create()
@@ -176,26 +177,28 @@ class LevelDB:
 
         err = c_char_p()
         self._db = dll.leveldb_open(self._options, str(self._db_path).encode("utf-8"), byref(err))
-        if err.value is not None:
-            msg = err.value.decode("utf-8", errors="replace")
-            dll.leveldb_free(err)
+        if err.value is not None or not self._db:
+            msg = err.value.decode("utf-8", errors="replace") if err.value else "NULL"
+            if err.value:
+                dll.leveldb_free(err)
             raise RuntimeError(f"leveldb_open failed: {msg}")
-        if not self._db:
-            raise RuntimeError("leveldb_open returned NULL")
 
         self._read_options = dll.leveldb_readoptions_create()
         self._write_options = dll.leveldb_writeoptions_create()
-        self._closed = False
 
     def close(self):
-        if self._closed:
+        if getattr(self, "_closed", False):
             return
         self._closed = True
         dll = _get_dll()
-        dll.leveldb_readoptions_destroy(self._read_options)
-        dll.leveldb_writeoptions_destroy(self._write_options)
-        dll.leveldb_close(self._db)
-        dll.leveldb_options_destroy(self._options)
+        if hasattr(self, "_read_options"):
+            dll.leveldb_readoptions_destroy(self._read_options)
+        if hasattr(self, "_write_options"):
+            dll.leveldb_writeoptions_destroy(self._write_options)
+        if hasattr(self, "_db") and self._db:
+            dll.leveldb_close(self._db)
+        if hasattr(self, "_options"):
+            dll.leveldb_options_destroy(self._options)
 
     def __enter__(self):
         return self
