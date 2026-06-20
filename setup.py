@@ -14,5 +14,8 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages(),
     package_data={"duck_leveldb": ["../libs/leveldb.dll"]},
+    install_requires=[
+        'plyvel; sys_platform != "win32"',
+    ],
     python_requires=">=3.6",
 )

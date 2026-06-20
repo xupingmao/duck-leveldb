@@ -9,6 +9,58 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = REPO_ROOT / "test_reports"
 JUNIT_XML = REPORT_DIR / "results.xml"
 COV_HTML = REPORT_DIR / "coverage"
+LIBS_DIR = REPO_ROOT / "libs"
+
+REQUIRED = ["pytest"]
+REQUIRED_COV = ["pytest-cov", "coverage"]
+OPTIONAL = ["plyvel"]
+
+
+def install(packages: list[str]):
+    print(f"Installing: {' '.join(packages)}")
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "install", *packages],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        print(result.stderr, file=sys.stderr)
+        sys.exit(1)
+
+
+def check_env(use_coverage: bool):
+    missing = [p for p in REQUIRED if not _importable(p)]
+    if use_coverage:
+        missing += [p for p in REQUIRED_COV if not _importable(p)]
+
+    if missing:
+        print(f"Missing dependencies: {', '.join(missing)}")
+        install(missing)
+
+    if not (LIBS_DIR / "leveldb.dll").exists():
+        print(f"Warning: leveldb.dll not found in {LIBS_DIR}", file=sys.stderr)
+
+    try:
+        import duck_leveldb  # noqa: F401
+    except ImportError as e:
+        print(f"duck_leveldb import failed: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"duck_leveldb backend init failed: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    available = [p for p in OPTIONAL if _importable(p)]
+    if not available:
+        print("plyvel not available, will use ctypes backend")
+
+
+def _importable(name: str) -> bool:
+    if name == "pytest-cov":
+        name = "pytest_cov"
+    try:
+        __import__(name.replace("-", "_"))
+        return True
+    except ImportError:
+        return False
 
 
 def clear_reports():
@@ -26,9 +78,13 @@ def main():
     )
     args = parser.parse_args()
 
+    use_coverage = not args.no_cov
+
+    print("Checking environment ...")
+    check_env(use_coverage)
+
     clear_reports()
 
-    use_coverage = not args.no_cov
     runner = [sys.executable, "-m", "pytest"]
 
     pytest_args = [
