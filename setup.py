@@ -8,7 +8,7 @@ README = (HERE / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="duck_leveldb",
-    version="1.0.0-20260620",
+    version="1.0.1-20260620",
     description="Cross-platform LevelDB interface for Python",
     long_description=README,
     long_description_content_type="text/markdown",
